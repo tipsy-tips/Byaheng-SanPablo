@@ -63,6 +63,79 @@ Provide step-by-step instructions on how to install and configure your project.
 
 ## Usage
 
+## Firebase Configuration
+
+To integrate Firebase with your Android project, follow these steps:
+
+1. **Add Firebase to your Android project:**
+   Visit the [Firebase Console](https://console.firebase.google.com/) and create a new project. Follow the setup instructions to add your Android app to the project.
+
+   - For detailed instructions, refer to the official documentation: [Add Firebase to your Android project](https://firebase.google.com/docs/android/setup).
+
+2. **Download `google-services.json`:**
+   After adding your app to the Firebase project, download the `google-services.json` file from the Firebase Console.
+
+3. **Place `google-services.json` in your app module:**
+   Move the downloaded `google-services.json` file into the `app` module of your Android project.
+   
+   /YourProject
+   ├── app/
+   │ ├── src/
+   │ ├── google-services.json
+   │ └── ...
+   ├── ...
+
+   
+4. **Update Gradle files:**
+In your `app/build.gradle` file, add the following dependencies and the `apply plugin` line at the bottom of the file:
+
+```gradle
+// Other dependencies...
+
+implementation 'com.google.firebase:firebase-analytics:22.0.0'
+implementation 'com.google.firebase:firebase-auth:22.0.0'
+// Add any other Firebase modules your app requires
+
+// ...
+
+apply plugin: 'com.google.gms.google-services'
+```
+
+In your project-level build.gradle file, add the Google services classpath:
+```
+buildscript {
+    dependencies {
+        // Other dependencies...
+        classpath 'com.google.gms:google-services:4.3.9'
+    }
+}
+```
+Sync your project with Gradle files.
+
+5. **Initialize Firebase in your app:**
+In your Application class or the main activity, initialize Firebase in the onCreate method:
+```
+// Import necessary packages
+import com.google.firebase.FirebaseApp;
+
+public class YourApplication extends Application {
+
+    @Override
+    public void onCreate() {
+        super.onCreate();
+
+        // Initialize Firebase
+        FirebaseApp.initializeApp(this);
+
+        // Other initialization code...
+    }
+}
+```
+Build and Run:
+After completing these steps, rebuild your project and run your Android app. Firebase should now be integrated into your project.
+
+For more detailed information and options, refer to the [Firebase Android Setup Guide:](https://firebase.google.com/docs/android/setup).
+
 ### Android Configuration
 
 #### Mapbox Access Token
