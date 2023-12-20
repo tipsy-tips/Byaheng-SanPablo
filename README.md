@@ -27,7 +27,7 @@ Explore a detailed map of San Pablo City highlighting lakes, restaurants, farms,
 
 ### 2. Real-time Traffic Monitoring
 
-Receive alerts about traffic conditions and alternative routes to optimize travel within the city.
+Receive insights about traffic conditions and alternative routes to optimize travel within the city.
 
 <img src="docs/traffic_monitoring.png" alt="Traffic Monitoring" width="300">
 
