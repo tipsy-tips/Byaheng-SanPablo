@@ -25,7 +25,7 @@ List key features and functionalities of your project.
 
 Explore a detailed map of San Pablo City highlighting lakes, restaurants, farms, resorts, travel agencies, inns/motels, event venues, and hotels.
 
-![Interactive Maps](docs/interactive_map.jpg)
+![Interactive Maps](docs/interactive_map.png)
 
 ### 2. Real-time Traffic Monitoring
 
