@@ -1,5 +1,5 @@
 # Byaheng SanPablo
- A mobile navigation application for tourists wants to travel San Pablo City
+ A mobile navigation application for tourists who want to travel San Pablo City
 
 ## Table of Contents
 
@@ -15,15 +15,19 @@
 
 ## Overview
 
-Provide a high-level overview of your project. Mention its purpose, main features, and any important background information.
+"Byaheng SanPablo" is a comprehensive mobile application developed as a capstone project to enhance the tourism experience in San Pablo City, Laguna. The application focuses on providing users with invaluable information about the city's attractions, services, and real-time traffic conditions to optimize their travel experience.
 
 ## Features
 
 List key features and functionalities of your project.
 
-- Feature 1
-- Feature 2
-- ...
+- **Interactive Point of Interest Maps:** Explore a detailed map of San Pablo City highlighting lakes, restaurants, farms, resorts, travel agencies, inns/motels, event venues, and hotels.
+
+- **Real-time Traffic Monitoring:** Receive insights about traffic conditions and alternative routes to optimize travel within the city.
+
+- **Personalized Experience:** Customize your exploration by selecting specific locations or categories based on your interests.
+
+- **Data Integration:** Utilizes GPS, mapping APIs, and real-time data integration for traffic monitoring. Enriched with data from public traffic sources, user-generated content, and information contributed by local businesses.
 
 ## Getting Started
 
@@ -33,16 +37,18 @@ Guide users through setting up your project on their local machine.
 
 List any software, tools, or dependencies that users need to install before using your project.
 
-- Prerequisite 1
-- Prerequisite 2
-- ...
+- Android Studio
+- Dart
+- Flutter
+- Node.js
+- npm (Node Package Manager)
 
 ### Installation
 
 Provide step-by-step instructions on how to install and configure your project.
 
-1. Clone the repository: `git clone https://github.com/yourusername/yourproject.git`
-2. Navigate to the project directory: `cd yourproject`
+1. Clone the repository: `git clone https://github.com/obscuredx/ByahengSanPablo.git`
+2. Navigate to the project directory: `cd ByahengSanPablo`
 3. Install dependencies: `npm install`
 
 ## Usage
@@ -51,16 +57,12 @@ Explain how to use your project. Include code snippets or examples.
 
 ## Contributing
 
-Provide guidelines for others who want to contribute to your project. Include information about how to submit issues or pull requests.
+We welcome contributions, feedback, and collaboration to continuously improve and expand the functionalities of Byaheng SanPablo. Please follow the guidelines in [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## License
 
-Specify the license under which your project is distributed.
+This project is licensed under the [MIT License](LICENSE.md) - see the [LICENSE.md](LICENSE.md) file for details.
 
 ## Acknowledgments
 
 Give credit to any third-party libraries, tools, or resources that you used or were inspired by.
-
----
-
-**Note:** Customize this template to fit the specific details of your project. Include screenshots, badges, or additional sections as needed.
