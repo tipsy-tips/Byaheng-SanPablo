@@ -1,0 +1,437 @@
+import 'dart:math';
+import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:mapbox_gl/mapbox_gl.dart';
+import 'package:mapbox_navigation/helpers/commons.dart';
+import 'poi_details.dart';
+import 'package:sliding_up_panel2/sliding_up_panel2.dart';
+
+import '../constants/poi.dart';
+import '../helpers/shared_prefs.dart';
+
+class pointOfInterestMap extends StatefulWidget {
+  const pointOfInterestMap({Key? key}) : super(key: key);
+
+  @override
+  State<pointOfInterestMap> createState() => _pointOfInterestMapState();
+}
+
+class CompassWidget extends StatelessWidget {
+  final MapboxMapController controller;
+
+  CompassWidget({required this.controller});
+
+  @override
+  Widget build(BuildContext context) {
+    return Align(
+      alignment: Alignment.bottomRight,
+      child: Padding(
+        padding: const EdgeInsets.only(bottom: 550.0, right: 25.0),
+        child: InkWell(
+          onTap: () {
+            // Implement the logic to reset the map's orientation to north here
+            final northBearing = 0.0; // The bearing angle for north orientation
+            controller.animateCamera(CameraUpdate.bearingTo(northBearing));
+            // Call the resetNorth method on the MapboxMapController
+          },
+          child: Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Icon(
+              Icons.navigation,
+              color: Colors.blue,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _pointOfInterestMapState extends State<pointOfInterestMap> {
+  // Mapbox related
+  late CameraPosition _initialCameraPosition;
+  late MapboxMapController controller;
+  LatLng latLng = getLatLngFromSharedPrefs();
+  int _currentFilterIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _initialCameraPosition = CameraPosition(target: latLng, zoom: 14, tilt: 0);
+  }
+
+
+  final Map<int, Map<String, dynamic>> _filterOptions = {
+    0: {
+      'label': 'All',
+      'icon': Icons.layers,
+    },
+    1: {
+      'label': 'Lakes',
+      'icon': Icons.water,
+    },
+    2: {
+      'label': 'Food',
+      'icon': Icons.fastfood,
+    },
+    3: {
+      'label': 'Things to Do',
+      'icon': Icons.directions_walk,
+    },
+    4: {
+      'label': 'Pharmacies',
+      'icon': Icons.local_pharmacy,
+    },
+    5: {
+      'label': 'Hotel',
+      'icon': Icons.hotel,
+    },
+    6: {
+      'label': 'Transit',
+      'icon': Icons.directions_bus,
+    },
+    7: {
+      'label': 'Gas',
+      'icon': Icons.local_gas_station,
+    },
+  };
+
+  _onStyleLoadedCallback() async {
+    for (int index = 0; index < POIs.length; index++) {
+      LatLng poiLocation = getLatLngFromPOIsData(index);
+
+      // Define symbol options for each POI
+      final symbolOptions = SymbolOptions(
+        geometry: poiLocation,
+        iconSize: 0.2,
+        iconImage: 'assets/icon/location.png',
+        textField: POIs[index]['name'],
+        textSize: 0.0,
+        textOffset: Offset(0, 2),
+      );
+
+
+      // Add the symbol to the map
+      await controller.addSymbol(symbolOptions);
+    }
+  }
+
+  _onMapCreated(MapboxMapController controller) async {
+    this.controller = controller;
+
+    // Set up the symbol tap callback
+    controller.onSymbolTapped.add((symbol) async {
+      final symbolId = symbol.options.textField;
+      final poiIndex = POIs.indexWhere((poi) => poi['name'] == symbolId);
+
+      if (poiIndex != -1) {
+        //print('POI $poiIndex was tapped');
+        // Show the sliding-up panel with POI details
+        await showSlidingUpPanel(
+          context,
+          Map<String, dynamic>.from(POIs[poiIndex]),
+        );
+      }
+    });
+
+    // Load map style and symbols
+    await _onStyleLoadedCallback();
+  }
+
+  Future<void> showSlidingUpPanel(BuildContext context,
+      Map<String, dynamic> poi) {
+    final screenHeight = MediaQuery
+        .of(context)
+        .size
+        .height;
+    final panelHeightFraction = 0.8; // Adjust this fraction as needed
+
+    return showModalBottomSheet<void>(
+      context: context,
+      builder: (BuildContext context) {
+        return Container(
+          height: screenHeight * panelHeightFraction,
+          child: POIDetails(poi: poi),
+        );
+      },
+      isScrollControlled: true,
+    );
+  }
+
+  _addSourceAndLineLayer(LatLng targetLocation, bool removeLayer) async {
+    // Calculate the bounding box for the target location and user's location
+    double minLat = min(targetLocation.latitude, latLng.latitude);
+    double minLng = min(targetLocation.longitude, latLng.longitude);
+    double maxLat = max(targetLocation.latitude, latLng.latitude);
+    double maxLng = max(targetLocation.longitude, latLng.longitude);
+
+    // Define the padding value (adjust as needed)
+    double padding = 0.01; // Use a suitable value for padding
+
+    // Apply padding to the bounding box
+    minLat -= padding;
+    minLng -= padding;
+    maxLat += padding;
+    maxLng += padding;
+
+    // Create a LatLngBounds with the adjusted values
+    LatLngBounds bounds = LatLngBounds(
+      southwest: LatLng(minLat, minLng),
+      northeast: LatLng(maxLat, maxLng),
+    );
+
+    // Create a CameraUpdate that fits the camera to the bounds with padding
+    CameraUpdate cameraUpdate = CameraUpdate.newLatLngBounds(bounds);
+
+    // Apply the camera update to the map
+    controller.animateCamera(cameraUpdate);
+
+    // Add a polyLine between source and destination
+    Map geometry = getGeometryFromSharedPrefs(0);
+    final _fills = {
+      "type": "FeatureCollection",
+      "features": [
+        {
+          "type": "Feature",
+          "id": 0,
+          "properties": <String, dynamic>{},
+          "geometry": geometry,
+        },
+      ],
+    };
+
+    // Remove lineLayer and source if it exists
+    if (removeLayer == true) {
+      await controller.removeLayer("lines");
+      await controller.removeSource("fills");
+    }
+
+    // Add a new source and lineLayer
+    await controller.addSource("fills", GeojsonSourceProperties(data: _fills));
+    await controller.addLineLayer(
+      "fills",
+      "lines",
+      LineLayerProperties(
+        lineColor: Colors.green.toHexStringRGB(),
+        lineCap: "round",
+        lineJoin: "round",
+        lineWidth: 2,
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: SafeArea(
+        child: Stack(
+          children: <Widget>[
+            SizedBox(
+              child: MapboxMap(
+                accessToken: dotenv.env['MAPBOX_ACCESS_TOKEN'],
+                initialCameraPosition: _initialCameraPosition,
+                compassEnabled: true, // Enable the compass
+                onMapCreated: (mapController) {
+                  setState(() {
+                    controller = mapController;
+                  });
+                  _onMapCreated(mapController);
+                },
+                onStyleLoadedCallback: _onStyleLoadedCallback,
+                styleString: 'mapbox://styles/mapbox/streets-v11',
+                myLocationEnabled: true,
+                myLocationTrackingMode: MyLocationTrackingMode.TrackingGPS,
+                minMaxZoomPreference: const MinMaxZoomPreference(8, 18),
+              )
+            ),
+            Positioned(
+              top: 135.0, // Adjust the top value to position it below the segmented button
+              right: 16.0,
+              child: Column(
+                children: [
+                  ElevatedButton(
+                    onPressed: () {
+                      // Increase the map's zoom level
+                      controller.animateCamera(CameraUpdate.zoomIn());
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.white, // White background
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(50.0), // Make it circular
+                        side: BorderSide(color: Colors.black), // Black border
+                      ),
+                    ),
+                    child: Icon(
+                      Icons.add,
+                      color: Colors.black, // Icon color
+                    ),
+                  ),
+                  Container(
+                    width: 40, // Adjust the width as needed
+                    height: 2, // Height of the separator line
+                    color: Colors.black, // Black separator line color
+                    margin: const EdgeInsets.symmetric(vertical: 4.0), // Adjust spacing
+                  ),
+                  ElevatedButton(
+                    onPressed: () {
+                      // Decrease the map's zoom level
+                      controller.animateCamera(CameraUpdate.zoomOut());
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.white, // White background
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(50.0), // Make it circular
+                        side: BorderSide(color: Colors.black), // Black border
+                      ),
+                    ),
+                    child: Icon(
+                      Icons.remove,
+                      color: Colors.black, // Icon color
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Positioned(
+              top: 16.0, // Adjust the top margin as needed
+              left: 16.0, // Adjust the left margin as needed
+              right: 16.0, // Adjust the right margin as needed
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(8.0),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                  child: TextField(
+                    decoration: InputDecoration(
+                      hintText: 'Search...',
+                      border: InputBorder.none,
+                    ),
+                  ),
+                ),
+              ),
+            ), // Dropdown menu button
+            Positioned(
+              top: 16.0, // Adjust the top margin as needed
+              right: 16.0, // Adjust the right margin as needed
+              child: PopupMenuButton<String>(
+                icon: Icon(Icons.more_vert), // Customize the dropdown menu icon
+                onSelected: (value) {
+                  // Handle menu item selection
+                  if (value == 'traffic') {
+                    // Handle traffic menu item
+                    // You can add your traffic-related functionality here
+                  } else if (value == 'emergency') {
+                    // Handle emergency menu item
+                    // You can add your emergency-related functionality here
+                  }
+                },
+                itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
+                  // Traffic menu item
+                  PopupMenuItem<String>(
+                    value: 'traffic',
+                    child: Row(
+                      children: [
+                        Icon(Icons.traffic), // Traffic icon
+                        SizedBox(width: 8.0), // Add spacing between icon and text
+                        Text('Traffic'), // Text for the menu item
+                      ],
+                    ),
+                  ),
+                  // Emergency menu item
+                  PopupMenuItem<String>(
+                    value: 'emergency',
+                    child: Row(
+                      children: [
+                        Icon(Icons.emergency), // Emergency icon
+                        SizedBox(width: 8.0), // Add spacing between icon and text
+                        Text('Emergency'), // Text for the menu item
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Positioned(
+              top: 70.0, // Adjust the top margin as needed to separate from search bar
+              left: 16.0, // Adjust the left margin as needed
+              right: 16.0, // Adjust the right margin as needed
+              child: Container(
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(32.0), // Increase the border radius
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      physics: BouncingScrollPhysics(), // Add scrolling physics
+                      child: Row(
+                        children: _filterOptions.entries.map((entry) {
+                          final index = entry.key;
+                          final filter = entry.value;
+                          final isSelected = _currentFilterIndex == index;
+
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 4.0), // Adjust horizontal padding
+                            child: GestureDetector(
+                              onTap: () {
+                                setState(() {
+                                  _currentFilterIndex = index; // Update filter index
+                                  // Implement filtering logic here based on the selected filter index
+                                });
+                              },
+                              child: Container(
+                                padding: EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(32.0), // Increase the border radius
+                                  color: isSelected ? Colors.blue : Colors.white,
+                                  border: Border.all(
+                                    color: isSelected ? Colors.blue : Colors.black,
+                                    width: 1.0, // Adjust the border width as needed
+                                  ),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      filter['icon'],
+                                      color: isSelected ? Colors.white : Colors.black,
+                                    ),
+                                    SizedBox(width: 8.0), // Add spacing between icon and text
+                                    Text(
+                                      filter['label'],
+                                      style: TextStyle(
+                                        color: isSelected ? Colors.white : Colors.black,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+
+    floatingActionButton: FloatingActionButton(
+    onPressed: () async {
+    controller.animateCamera(
+    CameraUpdate.newCameraPosition(_initialCameraPosition));
+    },
+    child: const Icon(Icons.my_location),
+    ),
+
+    );
+  }
+}

@@ -1,0 +1,453 @@
+import 'dart:math';
+import 'package:carousel_slider/carousel_slider.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:mapbox_gl/mapbox_gl.dart';
+import 'package:mapbox_navigation/helpers/commons.dart';
+
+import '../constants/poi.dart';
+import '../helpers/shared_prefs.dart';
+import '../widgets/carousel_card.dart';
+
+class pointOfInterestMap extends StatefulWidget {
+  const pointOfInterestMap({Key? key}) : super(key: key);
+
+  @override
+  State<pointOfInterestMap> createState() => _pointOfInterestMapState();
+}
+
+class _pointOfInterestMapState extends State<pointOfInterestMap> {
+  // Mapbox related
+  LatLng latLng = getLatLngFromSharedPrefs();
+  late CameraPosition _initialCameraPosition;
+  late MapboxMapController controller;
+  late List<CameraPosition> _kPointOfInterestList;
+
+  // Carousel related
+
+  List<Map> carouselData = [];
+  int pageIndex = 0;
+  bool accessed = false;
+  late List<Widget> carouselItems;
+
+  @override
+  void initState() {
+    super.initState();
+    _initialCameraPosition = CameraPosition(target: latLng, zoom: 15, tilt: 0);
+
+    // Calculate the distance and time from data in SharedPreferences
+    for (int index = 0; index < POIs.length; index++) {
+      num distance = getDistanceFromSharedPrefs(index) / 1000;
+      num duration = getDurationFromSharedPrefs(index) / 60;
+      carouselData
+          .add({'index': index, 'distance': distance, 'duration': duration});
+    }
+    carouselData.sort((a, b) => a['duration'] < b['duration'] ? 0 : 1);
+
+    // Generate the list of carousel widgets
+    carouselItems = List<Widget>.generate(
+        POIs.length,
+        (index) => carouselCard(carouselData[index]['index'],
+            carouselData[index]['distance'], carouselData[index]['duration']));
+
+    // initialize map symbols in the same order as carousel widgets
+    _kPointOfInterestList = List<CameraPosition>.generate(
+        POIs.length,
+        (index) => CameraPosition(
+            target: getLatLngFromPOIsData(carouselData[index]['index']),
+            zoom: 15));
+  }
+
+  _addSourceAndLineLayer(int index, bool removeLayer) async {
+    // Calculate the bounding box for the target location and user's location
+    LatLng targetLocation = getLatLngFromPOIsData(carouselData[index]['index']);
+    double minLat = min(targetLocation.latitude, latLng.latitude);
+    double minLng = min(targetLocation.longitude, latLng.longitude);
+    double maxLat = max(targetLocation.latitude, latLng.latitude);
+    double maxLng = max(targetLocation.longitude, latLng.longitude);
+
+    // Define the padding value (adjust as needed)
+    double padding = 0.01; // Use a suitable value for padding
+
+    // Apply padding to the bounding box
+    minLat -= padding;
+    minLng -= padding;
+    maxLat += padding;
+    maxLng += padding;
+
+    // Create a LatLngBounds with the adjusted values
+    LatLngBounds bounds = LatLngBounds(
+      southwest: LatLng(minLat, minLng),
+      northeast: LatLng(maxLat, maxLng),
+    );
+
+    // Create a CameraUpdate that fits the camera to the bounds with padding
+    CameraUpdate cameraUpdate = CameraUpdate.newLatLngBounds(bounds);
+
+    // Apply the camera update to the map
+    controller.animateCamera(cameraUpdate);
+
+    // Add a polyLine between source and destination
+    Map geometry = getGeometryFromSharedPrefs(carouselData[index]['index']);
+    final _fills = {
+      "type": "FeatureCollection",
+      "features": [
+        {
+          "type": "Feature",
+          "id": 0,
+          "properties": <String, dynamic>{},
+          "geometry": geometry,
+        },
+      ],
+    };
+
+    // Remove lineLayer and source if it exists
+    if (removeLayer == true) {
+      await controller.removeLayer("lines");
+      await controller.removeSource("fills");
+    }
+
+    // Add a new source and lineLayer
+    await controller.addSource("fills", GeojsonSourceProperties(data: _fills));
+    await controller.addLineLayer(
+      "fills",
+      "lines",
+      LineLayerProperties(
+        lineColor: Colors.green.toHexStringRGB(),
+        lineCap: "round",
+        lineJoin: "round",
+        lineWidth: 2,
+      ),
+    );
+  }
+
+
+  _onMapCreated(MapboxMapController controller) async {
+    this.controller = controller;
+  }
+
+  _onStyleLoadedCallback() async {
+    for (CameraPosition _kPointOfInterest in _kPointOfInterestList) {
+      await controller.addSymbol(
+        SymbolOptions(
+          geometry: _kPointOfInterest.target,
+          iconSize: 0.2,
+          iconImage: "assets/icon/location.png",
+        ),
+      );
+    }
+    _addSourceAndLineLayer(0, false);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('San Pablo City | Tourist Spots Map'),
+      ),
+      body: SafeArea(
+        child: Stack(
+          children: [
+            SizedBox(
+              height: MediaQuery.of(context).size.height * 0.8,
+              child: MapboxMap(
+                accessToken: dotenv.env['MAPBOX_ACCESS_TOKEN'],
+                initialCameraPosition: _initialCameraPosition,
+                onMapCreated: _onMapCreated,
+                onStyleLoadedCallback: _onStyleLoadedCallback,
+                styleString: 'mapbox://styles/mapbox/streets-v11',
+                myLocationEnabled: true,
+                myLocationTrackingMode: MyLocationTrackingMode.TrackingGPS,
+                minMaxZoomPreference: const MinMaxZoomPreference(8, 18),
+                compassEnabled: true, // Enable the compass control
+                compassViewPosition: CompassViewPosition.BottomLeft,
+              ),
+            ),
+            Padding(
+              padding: EdgeInsets.only(
+                right: 16.0, // Adjust the right padding as needed
+                bottom: 16.0, // Adjust the bottom padding as needed
+              ),
+              child: ExpandableFab(
+                distance: 80,
+                children: [
+                  ActionButton(
+                    onPressed: () {
+                      // Add your action for the first button here
+                    },
+                    icon: const Icon(Icons.format_size),
+                  ),
+                  ActionButton(
+                    onPressed: () {
+                      // Add your action for the second button here
+                    },
+                    icon: const Icon(Icons.insert_photo),
+                  ),
+                  ActionButton(
+                    onPressed: () {
+                      // Add your action for the third button here
+                    },
+                    icon: const Icon(Icons.videocam),
+                  ),
+                ],
+              ),
+            ),
+            /*CarouselSlider(
+              items: carouselItems,
+              options: CarouselOptions(
+                height: 100,
+                viewportFraction: 0.6,
+                initialPage: 0,
+                enableInfiniteScroll: false,
+                scrollDirection: Axis.horizontal,
+                onPageChanged:
+                    (int index, CarouselPageChangedReason reason) async {
+                  setState(() {
+                    pageIndex = index;
+                  });
+                  _addSourceAndLineLayer(index, true);
+                },
+              ),
+            ),*/
+          ],
+        ),
+      ),
+      /*floatingActionButton: FloatingActionButton(
+        onPressed: () async {
+          controller.animateCamera(
+              CameraUpdate.newCameraPosition(_initialCameraPosition));
+        },
+        child: const Icon(Icons.my_location),
+      ),*/
+    );
+  }
+}
+
+
+@immutable
+class ExpandableFab extends StatefulWidget {
+  const ExpandableFab({
+    super.key,
+    this.initialOpen,
+    required this.distance,
+    required this.children,
+  });
+
+  final bool? initialOpen;
+  final double distance;
+  final List<Widget> children;
+
+  @override
+  State<ExpandableFab> createState() => _ExpandableFabState();
+}
+
+class _ExpandableFabState extends State<ExpandableFab>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late final Animation<double> _expandAnimation;
+  bool _open = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _open = widget.initialOpen ?? false;
+    _controller = AnimationController(
+      value: _open ? 1.0 : 0.0,
+      duration: const Duration(milliseconds: 250),
+      vsync: this,
+    );
+    _expandAnimation = CurvedAnimation(
+      curve: Curves.fastOutSlowIn,
+      reverseCurve: Curves.easeOutQuad,
+      parent: _controller,
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _toggle() {
+    setState(() {
+      _open = !_open;
+      if (_open) {
+        _controller.forward();
+      } else {
+        _controller.reverse();
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox.expand(
+      child: Stack(
+        alignment: Alignment.bottomRight,
+        clipBehavior: Clip.none,
+        children: [
+          _buildTapToCloseFab(),
+          ..._buildExpandingActionButtons(),
+          _buildTapToOpenFab(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTapToCloseFab() {
+    return SizedBox(
+      width: 56,
+      height: 56,
+      child: Center(
+        child: Material(
+          shape: const CircleBorder(),
+          clipBehavior: Clip.antiAlias,
+          elevation: 4,
+          child: InkWell(
+            onTap: _toggle,
+            child: Padding(
+              padding: const EdgeInsets.all(8),
+              child: Icon(
+                Icons.close,
+                color: Theme.of(context).primaryColor,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  List<Widget> _buildExpandingActionButtons() {
+    final children = <Widget>[];
+    final count = widget.children.length;
+    final step = 90.0 / (count - 1);
+    for (var i = 0, angleInDegrees = 0.0; i < count; i++, angleInDegrees += step) {
+      children.add(
+        _ExpandingActionButton(
+          directionInDegrees: angleInDegrees,
+          maxDistance: widget.distance,
+          progress: _expandAnimation,
+          child: widget.children[i],
+        ),
+      );
+    }
+    return children;
+  }
+
+  Widget _buildTapToOpenFab() {
+    return IgnorePointer(
+      ignoring: _open,
+      child: AnimatedContainer(
+        transformAlignment: Alignment.center,
+        transform: Matrix4.diagonal3Values(
+          _open ? 0.7 : 1.0,
+          _open ? 0.7 : 1.0,
+          1.0,
+        ),
+        duration: const Duration(milliseconds: 250),
+        curve: const Interval(0.0, 0.5, curve: Curves.easeOut),
+        child: AnimatedOpacity(
+          opacity: _open ? 0.0 : 1.0,
+          curve: const Interval(0.25, 1.0, curve: Curves.easeInOut),
+          duration: const Duration(milliseconds: 250),
+          child: FloatingActionButton(
+            onPressed: _toggle,
+            child: const Icon(Icons.create),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+@immutable
+class _ExpandingActionButton extends StatelessWidget {
+  const _ExpandingActionButton({
+    required this.directionInDegrees,
+    required this.maxDistance,
+    required this.progress,
+    required this.child,
+  });
+
+  final double directionInDegrees;
+  final double maxDistance;
+  final Animation<double> progress;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: progress,
+      builder: (context, child) {
+        final offset = Offset.fromDirection(
+          directionInDegrees * (pi / 180.0),
+          progress.value * maxDistance,
+        );
+        return Positioned(
+          right: 4.0 + offset.dx,
+          bottom: 4.0 + offset.dy,
+          child: Transform.rotate(
+            angle: (1.0 - progress.value) * pi / 2,
+            child: child!,
+          ),
+        );
+      },
+      child: FadeTransition(
+        opacity: progress,
+        child: child,
+      ),
+    );
+  }
+}
+
+@immutable
+class ActionButton extends StatelessWidget {
+  const ActionButton({
+    super.key,
+    this.onPressed,
+    required this.icon,
+  });
+
+  final VoidCallback? onPressed;
+  final Widget icon;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Material(
+      shape: const CircleBorder(),
+      clipBehavior: Clip.antiAlias,
+      color: theme.colorScheme.secondary,
+      elevation: 4,
+      child: IconButton(
+        onPressed: onPressed,
+        icon: icon,
+        color: theme.colorScheme.onSecondary,
+      ),
+    );
+  }
+}
+
+@immutable
+class FakeItem extends StatelessWidget {
+  const FakeItem({
+    super.key,
+    required this.isBig,
+  });
+
+  final bool isBig;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 24),
+      height: isBig ? 128 : 36,
+      decoration: BoxDecoration(
+        borderRadius: const BorderRadius.all(Radius.circular(8)),
+        color: Colors.grey.shade300,
+      ),
+    );
+  }
+}
