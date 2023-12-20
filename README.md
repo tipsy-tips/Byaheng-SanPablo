@@ -1,4 +1,4 @@
-# Byaheng San Pablo <img src="docs/logo.png" width="150">
+# <img src="docs/logo.png" width="100"> Byaheng San Pablo
  A mobile navigation application for tourists who want to travel San Pablo City
 
 ## Table of Contents
