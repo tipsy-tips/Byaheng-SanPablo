@@ -21,13 +21,30 @@
 
 List key features and functionalities of your project.
 
-- **Interactive Point of Interest Maps:** Explore a detailed map of San Pablo City highlighting lakes, restaurants, farms, resorts, travel agencies, inns/motels, event venues, and hotels.
+### 1. Interactive Point of Interest Maps
 
-- **Real-time Traffic Monitoring:** Receive insights about traffic conditions and alternative routes to optimize travel within the city.
+Explore a detailed map of San Pablo City highlighting lakes, restaurants, farms, resorts, travel agencies, inns/motels, event venues, and hotels.
 
-- **Personalized Experience:** Customize your exploration by selecting specific locations or categories based on your interests.
+![Interactive Maps](docs/interactive_map.jpg)
 
-- **Data Integration:** Utilizes GPS, mapping APIs, and real-time data integration for traffic monitoring. Enriched with data from public traffic sources, user-generated content, and information contributed by local businesses.
+### 2. Real-time Traffic Monitoring
+
+Receive alerts about traffic conditions and alternative routes to optimize travel within the city.
+
+![Traffic Monitoring](docs/traffic_monitoring.png)
+
+### 3. Personalized Experience
+
+Customize your exploration by selecting specific locations or categories based on your interests.
+
+![Personalized Experience](docs/personalized_experience.png)
+
+### 4. Data Integration
+
+Utilizes GPS, mapping APIs, and real-time data integration for traffic monitoring. Enriched with data from public traffic sources, user-generated content, and information contributed by local businesses.
+
+![Data Integration](docs/data_integration.png)
+
 
 ## Getting Started
 
