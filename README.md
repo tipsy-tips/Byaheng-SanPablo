@@ -61,7 +61,7 @@ Provide step-by-step instructions on how to install and configure your project.
 2. Navigate to the project directory: `cd ByahengSanPablo`
 3. Install dependencies: `npm install`
 
-### Usage
+## Usage
 
 ### Firebase Configuration
 
