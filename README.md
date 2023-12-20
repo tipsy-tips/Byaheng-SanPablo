@@ -63,7 +63,7 @@ Provide step-by-step instructions on how to install and configure your project.
 
 ### Usage
 
-## Firebase Configuration
+### Firebase Configuration
 
 To integrate Firebase with your Android project, follow these steps:
 
