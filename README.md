@@ -23,7 +23,7 @@
 
 Explore a detailed map of San Pablo City highlighting lakes, restaurants, farms, resorts, travel agencies, inns/motels, event venues, and hotels.
 
-<img src="docs/interactive_maps.png" alt="Interactive Maps" width="300">
+<img src="docs/interactive_map.png" alt="Interactive Maps" width="300">
 
 ### 2. Real-time Traffic Monitoring
 
