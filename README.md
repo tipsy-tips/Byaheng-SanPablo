@@ -61,6 +61,75 @@ Provide step-by-step instructions on how to install and configure your project.
 2. Navigate to the project directory: `cd ByahengSanPablo`
 3. Install dependencies: `npm install`
 
+## Usage
+
+### Android Configuration
+
+#### Mapbox Access Token
+
+Mapbox APIs and vector tiles require a Mapbox account and API access token. Follow these steps to configure the Mapbox access token:
+
+1. Add a new resource file called `mapbox_access_token.xml` at the following path: `<YOUR_FLUTTER_APP_ROOT>/android/app/src/main/res/values/mapbox_access_token.xml`.
+
+2. Inside `mapbox_access_token.xml`, add the following content, replacing `ADD_MAPBOX_ACCESS_TOKEN_HERE` with your actual Mapbox access token. You can obtain an access token from the [Mapbox account page](https://account.mapbox.com/):
+
+    ```xml
+    <?xml version="1.0" encoding="utf-8"?>
+    <resources xmlns:tools="http://schemas.android.com/tools">
+        <string name="mapbox_access_token" translatable="false" tools:ignore="UnusedResources">ADD_MAPBOX_ACCESS_TOKEN_HERE</string>
+    </resources>
+    ```
+
+#### App Permissions
+
+Add the following permissions to the app-level Android Manifest (`android/app/src/main/AndroidManifest.xml`):
+
+```xml
+<manifest>
+    ...
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    ...
+</manifest>
+```
+
+#### MapBox Downloads Token
+Add the MapBox Downloads token with the downloads:read scope to your gradle.properties file in the Android folder to enable downloading the MapBox binaries from the repository. To secure this token from getting checked into source control, you can add it to the gradle.properties of your GRADLE_HOME, which is usually at $USER_HOME/.gradle for Mac. Retrieve this token from your MapBox Dashboard. Review the Token Guide for more information about download tokens.
+
+```
+MAPBOX_DOWNLOADS_TOKEN=sk.XXXXXXXXXXXXXXX
+```
+
+After adding the above, your gradle.properties file may look something like this:
+
+```
+org.gradle.jvmargs=-Xmx1536M
+android.useAndroidX=true
+android.enableJetifier=true
+MAPBOX_DOWNLOADS_TOKEN=sk.XXXXXXXXXXXXXXX
+```
+
+#### Update MainActivity.kt
+Update MainActivity.kt to extend FlutterFragmentActivity instead of FlutterActivity. Otherwise, you may encounter the error: Caused by: java.lang.IllegalStateException: Please ensure that the hosting Context is a valid ViewModelStoreOwner.
+
+```
+// import io.flutter.embedding.android.FlutterActivity
+import io.flutter.embedding.android.FlutterFragmentActivity
+
+class MainActivity: FlutterFragmentActivity() {
+}
+```
+
+#### Add Kotlin Platform Dependency
+Add the following implementation platform to android/app/build.gradle:
+
+```
+implementation platform("org.jetbrains.kotlin:kotlin-bom:1.8.0")
+```
+
+These configurations ensure proper setup for Mapbox integration with your Flutter application on Android.
+
 ## Contributing
 
 We welcome contributions, feedback, and collaboration to continuously improve and expand the functionalities of Byaheng SanPablo. Please follow the guidelines in [CONTRIBUTING.md](CONTRIBUTING.md).
