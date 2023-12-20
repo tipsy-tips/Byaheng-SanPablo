@@ -23,25 +23,25 @@
 
 Explore a detailed map of San Pablo City highlighting lakes, restaurants, farms, resorts, travel agencies, inns/motels, event venues, and hotels.
 
-<img src="docs/interactive_maps.png" alt="Interactive Maps" width="400">
+<img src="docs/interactive_maps.png" alt="Interactive Maps" width="300">
 
 ### 2. Real-time Traffic Monitoring
 
 Receive alerts about traffic conditions and alternative routes to optimize travel within the city.
 
-<img src="docs/traffic_monitoring.png" alt="Traffic Monitoring" width="400">
+<img src="docs/traffic_monitoring.png" alt="Traffic Monitoring" width="300">
 
 ### 3. Personalized Experience
 
 Customize your exploration by selecting specific locations or categories based on your interests.
 
-<img src="docs/personalized_experience.png" alt="Personalized Experience" width="400">
+<img src="docs/personalized_experience.png" alt="Personalized Experience" width="300">
 
 ### 4. Data Integration
 
 Utilizes GPS, mapping APIs, and real-time data integration for traffic monitoring. Enriched with data from public traffic sources, user-generated content, and information contributed by local businesses.
 
-<img src="docs/data_integration.png" alt="Data Integration" width="400">
+<img src="docs/data_integration.png" alt="Data Integration" width="300">
 
 ## Getting Started
 
