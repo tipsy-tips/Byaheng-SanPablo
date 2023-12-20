@@ -45,11 +45,7 @@ Utilizes GPS, mapping APIs, and real-time data integration for traffic monitorin
 
 ## Getting Started
 
-Guide users through setting up your project on their local machine.
-
 ### Prerequisites
-
-List any software, tools, or dependencies that users need to install before using your project.
 
 - Android Studio
 - Dart
@@ -64,10 +60,6 @@ Provide step-by-step instructions on how to install and configure your project.
 1. Clone the repository: `git clone https://github.com/obscuredx/ByahengSanPablo.git`
 2. Navigate to the project directory: `cd ByahengSanPablo`
 3. Install dependencies: `npm install`
-
-## Usage
-
-Explain how to use your project. Include code snippets or examples.
 
 ## Contributing
 
