@@ -77,13 +77,14 @@ To integrate Firebase with your Android project, follow these steps:
 
 3. **Place `google-services.json` in your app module:**
    Move the downloaded `google-services.json` file into the `app` module of your Android project.
-   
+```   
    /YourProject
    ├── app/
    │ ├── src/
    │ ├── google-services.json
    │ └── ...
    ├── ...
+```
 
    
 4. **Update Gradle files:**
