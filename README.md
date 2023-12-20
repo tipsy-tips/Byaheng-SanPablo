@@ -211,7 +211,3 @@ We welcome contributions, feedback, and collaboration to continuously improve an
 ## License
 
 This project is licensed under the [MIT License](LICENSE.md) - see the [LICENSE.md](LICENSE.md) file for details.
-
-## Acknowledgments
-
-Give credit to any third-party libraries, tools, or resources that you used or were inspired by.
